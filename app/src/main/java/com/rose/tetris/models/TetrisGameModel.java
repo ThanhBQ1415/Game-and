@@ -25,6 +25,8 @@ class TetrisGameModel implements GameModel {
     private static final int PLAYING_AREA_HEIGHT = GAME_SIZE;
     private static final int UPCOMING_AREA_SIZE = 4;
 
+   int lan=0;
+
     private Point[][] mPoints;
     private Point[][] mPlayingPoints;
     private Point[][] mUpcomingPoints;
@@ -153,6 +155,7 @@ class TetrisGameModel implements GameModel {
 
     @Override
     public void startGame(PresenterObserver<Point[][]> onGameDrawnListener) {
+        if(difficulty.equals("hard") && lan==0)  { initializeRandomBoxes(12); lan=1;}
         mIsGamePaused.set(false);
         final long sleepTime = 1000 / FPS;
         new Thread(() -> {
@@ -185,7 +188,6 @@ class TetrisGameModel implements GameModel {
                 mIsGamePaused.set(true);
                 return;
             }
-
             int y = mFallingPoints.stream().mapToInt(p -> p.y).max().orElse(-1);
             while (y >= 0) {
                 boolean isScored = true;
@@ -215,6 +217,7 @@ class TetrisGameModel implements GameModel {
                         }
                     }
                     tmPoints.forEach(this::updatePlayingPoint);
+
                 } else {
                     y--;
                 }
@@ -231,6 +234,9 @@ class TetrisGameModel implements GameModel {
             mFallingPoints.clear();
             mFallingPoints.addAll(tmPoints);
             mFallingPoints.forEach(this::updatePlayingPoint);
+
+
+
         }
     }
 
@@ -493,16 +499,31 @@ class TetrisGameModel implements GameModel {
         this.difficulty = difficulty;
         switch (difficulty.toLowerCase()) {
             case "easy":
-                setFPS(120);
-                break;
-            case "normal":
                 setFPS(130);
                 break;
-            case "hard":
+            case "normal":
                 setFPS(150);
                 break;
+            case "hard":
+                setFPS(170);
+                break;
             default:
-                setFPS(130); // Giá trị mặc định
+                setFPS(130);
         }
     }
+    private void initializeRandomBoxes(int numberOfBoxes) {
+        Random random = new Random();
+        int[] columnHeights = new int[PLAYING_AREA_WIDTH];
+        for (int i = 0; i < numberOfBoxes; i++) {
+            int column = random.nextInt(PLAYING_AREA_WIDTH);
+            int row = PLAYING_AREA_HEIGHT - 1 - columnHeights[column];
+            if (row < 0) {
+                continue;
+            }
+            Point newBox = new Point(column, row, PointType.BOX, false);
+            updatePlayingPoint(newBox);
+            columnHeights[column]++;
+        }
+    }
+
 }
